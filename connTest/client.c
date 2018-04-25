@@ -7,8 +7,7 @@
 #include<netdb.h>
 #include<errno.h>
 
-#define PORT "3650"
-
+#define PORT "5100"
 
 int main(int argc, char** argv)
 {
@@ -17,62 +16,58 @@ int main(int argc, char** argv)
 	struct sockaddr_in serveraddr;
 	char* hostname;
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-
+	// Check that you are provided a hostname to connect to.
 	if (argc != 2)
 	{
-		fprintf(stderr, "Client: hostname \n");
+		fprintf(stderr, "hostname\n");
 		exit(1);
 	}
 
 	hostname = argv[1];
 
+	// Set up the structures that we will use.
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 
 	int r = getaddrinfo(hostname, PORT, &hints, &infoptr);
-	
-	if (r)
+	if (r != 0)
 	{
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(r));
 		exit(1);
 	}
 
+	// Loop through the results and connect to the first address that we can.
 	for (ptr = infoptr; ptr != NULL; ptr = ptr->ai_next)
 	{
 
-		// Create the socket.
+		// Create a socket.
 		sockfd = socket(AF_INET, SOCK_STREAM, ptr->ai_protocol);
 		if (sockfd == -1)
 		{
 			perror("Error: socket");
+			close(sockfd);
 			continue;
 		}
 
-		// Connect to the server
-		if (connect(sockfd, ptr->ai_addr, ptr->ai_addrlen))
+		// Connect
+		if (connect(sockfd, ptr->ai_addr, ptr->ai_addrlen) == -1)
 		{
-			close(sockfd);
 			perror("Error: connect");
+			close(sockfd);
 			continue;
 		}
+
+		printf("Client has connected to the server.\n");
 
 		break;
 	}
 
 	if (ptr == NULL)
 	{
-		fprintf(stderr, "Client: Failed to locate host\n");
+		fprintf(stderr, "Unable to connect.\n");
 		exit(1);
 	}
 
 	freeaddrinfo(infoptr);
-
-	printf("Client successfully connected to server!\n");
-	close(sockfd);
-	return 0;
-
 }

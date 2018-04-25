@@ -7,43 +7,40 @@
 #include<netdb.h>
 #include<errno.h>
 
-#define PORT "3650"
+#define PORT "5100"
 
-int sockfd, connfd;
-
-int main(int argc, char** argv)
+int main() 
 {
+	int sockfd, connfd;
 	struct addrinfo hints, *infoptr, *ptr;
 	struct sockaddr_in clientaddr;
 	socklen_t clientaddr_len;
 
-	memset(&hints, 0, sizeof(hints));
+	// Set up the structures that we will use later.
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
 	int r = getaddrinfo(NULL, PORT, &hints, &infoptr);
-
-	if (r)
+	if (r != 0)
 	{
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(r));
+		fprintf(stderr, "getaddrinfo:; %s\n", gai_strerror(r));
 		exit(1);
 	}
 
+	// Loop through all the results and bind to one.
 	for (ptr = infoptr; ptr != NULL; ptr = ptr->ai_next)
 	{
-		// Create a socket
-		sockfd = socket(AF_INET, SOCK_STREAM, ptr->ai_protocol);
+		
+		// Create socket.
+		sockfd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
 		if (sockfd == -1)
 		{
-			// Unsuccessfully attempted to create the socket.
 			perror("Error: socket");
 			continue;
 		}
 
-		printf("Socket created successfully!\n");
-
-		// Bind the socket.
+		// Bind
 		if (bind(sockfd, ptr->ai_addr, ptr->ai_addrlen) == -1)
 		{
 			close(sockfd);
@@ -51,33 +48,31 @@ int main(int argc, char** argv)
 			continue;
 		}
 
-		printf("Socket bound successfully!\n");
-
-		break;
+		break;		
 	}
 
-	if (ptr == NULL)
+	if (ptr == NULL) 
 	{
-		fprintf(stderr, "Server: Failed to bind\n");
+		fprintf(stderr, "Unable to bind socket.\n");
 		exit(1);
 	}
 
-	// Listen for connections.
+	freeaddrinfo(infoptr);
+
 	if (listen(sockfd, 10) == -1)
 	{
 		close(sockfd);
 		perror("Error: listen");
 		exit(1);
 	}
-
 	printf("Server waiting for connections...\n");
 
-	while (1)
+	while (1) 
 	{
-
+		
 		clientaddr_len = sizeof(clientaddr);
 		connfd = accept(sockfd, (struct sockaddr *)&clientaddr, &clientaddr_len);
-		
+
 		if (connfd == -1)
 		{
 			close(sockfd);
@@ -87,11 +82,9 @@ int main(int argc, char** argv)
 		}
 
 		printf("Connected to a client!\n");
-		close(connfd);
 		break;
 	}
-	printf("Closed connection.\n");
+	close(connfd);
 	close(sockfd);
 	return 0;
-
 }
