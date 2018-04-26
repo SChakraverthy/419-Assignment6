@@ -4,41 +4,31 @@ Spyder Editor
 
 This is a temporary script file.
 """
+import socket
 
-# first of all import the socket library
-import socket               
- 
-# next create a socket object
-conn = socket.socket()     
-    
-print("Socket successfully created")
- 
-# reserve a port on your computer in our
-# case it is 12345 but it can be anything
-port = 5100               
- 
-# Next bind to the port
-# we have not typed any ip in the ip field
-# instead we have inputted an empty string
-# this makes the server listen to requests 
-# coming from other computers on the network
-conn.bind(('', port))        
-print("socket binded to " + str(port)) 
- 
-# put the socket into listening mode
-conn.listen(5)     
-print("socket is listening")           
- 
-# a forever loop until we interrupt it or 
-# an error occurs
-while True:
- 
-   # Establish connection with client.
-   c, addr = conn.accept()     
-   print('Got connection from', addr)
- 
-   # send a thank you message to the client. 
-   c.send('Thank you for connecting')
- 
-   # Close the connection with the client
-   c.close()
+def main():
+	port = 5100
+	
+	#Create the socket and bind it to the defined port.
+	conn = socket.socket()
+	conn.bind(('', port))
+
+	#Listen for connections
+	conn.listen(10)
+	print('Listening for connections...')
+
+	while True:
+		
+		# Accept incoming connections
+		(c, addr) = conn.accept()
+		print('Connection accepted from: ', addr)
+
+		mssg = 'Connected to the server!'.encode()
+		c.send(mssg)
+		c.close()
+		break
+
+	conn.close()
+
+if __name__ == "__main__":
+	main()

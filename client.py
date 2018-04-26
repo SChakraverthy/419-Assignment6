@@ -5,20 +5,35 @@ Created on Thu Apr 26 13:48:45 2018
 
 @author: shikhanair
 """
+import socket
+import sys
 
-# Import socket module
-import socket               
- 
-# Create a socket object
-conn = socket.socket()         
- 
-# Define the port on which you want to connect
-port = 3650               
- 
-# connect to the server on local computer
-conn.connect(('127.0.0.1', port))
- 
-# receive data from the server
-print(conn.recv(1024))
-# close the connection
-conn.close()       
+def main():
+	
+	# Define connection port
+	port = 5100
+
+	# Check for args
+	if(len(sys.argv) < 2):
+		print("No host specified\n")
+
+	host = sys.argv[1]
+
+	if(len(sys.argv) == 3):
+		port = int(sys.argv[2])
+
+	# Create the socket
+	conn = socket.socket()
+
+	# Connect to the server at the specified host
+	conn.connect((host, port))
+
+	# Receive data from the server.
+	mssg = conn.recv(64).decode()
+	print(mssg)
+
+	# Close the connection
+	conn.close()
+
+if __name__ == "__main__":
+	main()
