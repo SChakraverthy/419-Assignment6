@@ -21,8 +21,9 @@ def post(grpname, msg):
     
     grp = fileFriendly(grpname)
     
-    with open(grp+".p", "wb") as mb:
+    with open(grp+".p", "ab") as mb:
         nmsg = msg + " " + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+        #print("posting: ", nmsg)
         pickle.dump(nmsg, mb)
     
     return 
@@ -33,11 +34,17 @@ def get(grpname):
     
     with open(grp+".p", "rb") as mb:
         msgs = pickle.load(mb)
+        i = 0
+        while(i==0):
+            try: 
+                msgs = pickle.load(mb)  
+                #NEED TO SEND msgs TO CLIENT!!!
+                #For now:
+                print(msgs)
+            except EOFError:
+                i=1
         
-        #NEED TO SEND msgs TO CLIENT!!!
-        #For now:
-        print(msgs)
-    
+      
     return
 
 #this function takes the username and password provided by the client and verifies the login information
