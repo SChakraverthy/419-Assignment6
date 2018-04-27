@@ -22,7 +22,7 @@ def post(grpname, msg):
     grp = fileFriendly(grpname)
     
     with open(grp+".p", "wb") as mb:
-        nmsg = msg + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+        nmsg = msg + " " + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         pickle.dump(nmsg, mb)
     
     return 
