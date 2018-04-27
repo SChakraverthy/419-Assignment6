@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr 26 13:48:45 2018
-
-@author: shikhanair
+Assignment 5 OpenSSL Message Board: server.py
+Swapna Chakraverthy, Shikha Nair
 """
 import socket
 import sys
