@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
-This is a temporary script file.
+Assignment 5 OpenSSL Message Board: server.py
+Swapna Chakraverthy, Shikha Nair
 """
 import socket
 import hashlib
@@ -27,6 +27,18 @@ def post(grpname, msg):
     
     return 
 
+def get(grpname):
+    
+    grp = fileFriendly(grpname)
+    
+    with open(grp+".p", "rb") as mb:
+        msgs = pickle.load(mb)
+        
+        #NEED TO SEND msgs TO CLIENT!!!
+        #For now:
+        print(msgs)
+    
+    return
 
 #this function takes the username and password provided by the client and verifies the login information
 #True if login success, False otherwise
@@ -72,52 +84,6 @@ def handleconn(conn):
 		elif(cmd =="END"):
 			print("Received END command from client!")
 			break
-		else:
-			print("No valid commands received")
-
-
-
-
-def main():
-	port = 5100
-	
-	# Create the SSL Context
-	context = ssl.SSLContext()
-	context.check_hostname=False
-	context.load_cert_chain(certfile="certfile.crt", keyfile="keyfile.key")
-
-	#Create the socket and bind it to the defined port.
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.bind(('', port))
-
-	#Listen for connections
-	s.listen(10)
-	print('Listening for connections...')
-
-	while True:
-		
-		# Accept incoming connections
-		(c, addr) = s.accept()
-		print('Connection accepted from: ', addr)
-
-		# Wrap the normal socket.
-		try:
-			conn = context.wrap_socket(c, server_side=True)
-		except ssl.SSLError as e:
-			print("wrap_socket Error: ", e)
-			s.close()
-			c.close()
-			return
-
-		handleconn(conn)
-
-		c.close()
-		break
-
-	s.close()
-
-if __name__ == "__main__":
-	main()break
 		else:
 			print("No valid commands received")
 
