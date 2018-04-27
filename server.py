@@ -8,6 +8,13 @@ import socket
 import hashlib
 import ssl
 import pickle
+import re
+
+
+#Turns Message Board name in a file-friendly name for the Message Board file
+def fileFriendly(name):
+    return re.sub(r'\W+', '', name)
+
 
 #this function takes the username and password provided by the client and verifies the login information
 #True if login success, False otherwise
