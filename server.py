@@ -6,6 +6,8 @@ This is a temporary script file.
 """
 import socket
 import hashlib
+import ssl
+import pickle
 
 #this function takes the username and password provided by the client and verifies the login information
 #True if login success, False otherwise
@@ -38,30 +40,62 @@ def login(un, pw):
 
     return True
 
+def handleconn(conn):
+	
+	while True:
+		
+		cmd = conn.recv(5).decode()
+
+		if(cmd == "GET"):
+			print("Received GET command from client!")
+		elif(cmd == "POST"):
+			print("Received POST command from client!")
+		elif(cmd =="END"):
+			print("Received END command from client!")
+			break
+		else:
+			print("No valid commands received")
+
+
+
 
 def main():
 	port = 5100
 	
+	# Create the SSL Context
+	context = ssl.SSLContext()
+	context.check_hostname=False
+	context.load_cert_chain(certfile="certfile.crt", keyfile="keyfile.key")
+
 	#Create the socket and bind it to the defined port.
-	conn = socket.socket()
-	conn.bind(('', port))
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.bind(('', port))
 
 	#Listen for connections
-	conn.listen(10)
+	s.listen(10)
 	print('Listening for connections...')
 
 	while True:
 		
 		# Accept incoming connections
-		(c, addr) = conn.accept()
+		(c, addr) = s.accept()
 		print('Connection accepted from: ', addr)
 
-		mssg = 'Connected to the server!'.encode()
-		c.send(mssg)
+		# Wrap the normal socket.
+		try:
+			conn = context.wrap_socket(c, server_side=True)
+		except ssl.SSLError as e:
+			print("wrap_socket Error: ", e)
+			s.close()
+			c.close()
+			return
+
+		handleconn(conn)
+
 		c.close()
 		break
 
-	conn.close()
+	s.close()
 
 if __name__ == "__main__":
 	main()
