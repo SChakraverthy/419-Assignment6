@@ -10,13 +10,17 @@ import pickle
 import re
 import time
 import datetime
+import sys
+
 
 
 #Turns Message Board name in a file-friendly name for the Message Board file
 def fileFriendly(name):
     return re.sub(r'\W+', '', name)
-
-
+	
+# This function takes a group name (grpname) and a message (msg) as arguments
+# Converts the group name into a file friendly format and then opens or creates
+# a file to append the new message to. The message is added with a timestamp.
 def post(grpname, msg):
     
     grp = fileFriendly(grpname)
@@ -28,24 +32,23 @@ def post(grpname, msg):
     
     return 
 
+# This function takes a group name (grpname) as an argument.
+# It converts the group name to a file friendly format and opens the file with that name.
+# It retrieves a list of messages from the file and returns it.
 def get(grpname):
-    
-    grp = fileFriendly(grpname)
-    
-    with open(grp+".p", "rb") as mb:
-        msgs = pickle.load(mb)
-        i = 0
-        while(i==0):
-            try: 
-                msgs = pickle.load(mb)  
-                #NEED TO SEND msgs TO CLIENT!!!
-                #For now:
-                print(msgs)
-            except EOFError:
-                i=1
-        
-      
-    return
+	
+	msgs = []
+	grp = fileFriendly(grpname)
+
+	with(open(grp+".p", "rb")) as mb:
+		while True:
+			try:
+				msgs.append(pickle.load(mb))
+			except EOFError:
+				break
+
+	return msgs
+	
 
 #this function takes the username and password provided by the client and verifies the login information
 #True if login success, False otherwise
@@ -78,6 +81,12 @@ def login(un, pw):
 
     return True
 
+# This function takes the ssl-wrapped connection socket as an argument.
+# It runs on a loop and receives client commands: GET, POST, and END. GET: Receives the group name argument from 
+# the client and calls the get() function to retrieve a list of messages. It then sends the list of messages to The
+# client. POST: Receives the group name and message arguments from the client and calls the post() function to
+# add the message and/or group to the board. END: Receives no arguments from the client. Ends the server's acceptance of
+# commands from the client.
 def handleconn(conn):
 	
 	while True:
@@ -85,14 +94,42 @@ def handleconn(conn):
 		cmd = conn.recv(5).decode()
 
 		if(cmd == "GET"):
-			print("Received GET command from client!")
+
+			# Receive the number of bytes to expect from the client.
+			num_bytes = int(conn.recv().decode())
+
+			# Receive the group name argument from the client.
+			data = conn.recv(num_bytes)
+			grp = pickle.loads(data)
+
+			# Provide the group name as argument to the get function.
+			# Receive a list of messages in return.
+			msgs = get(grp)
+			
+			# Send the length of the pickled messages list to the client.
+			numbytes_sent = str(len(pickle.dumps(msgs)))
+			conn.send(numbytes_sent.encode())
+
+			# Send the messages to the client.
+			conn.sendall(pickle.dumps(msgs))
+
+
 		elif(cmd == "POST"):
-			print("Received POST command from client!")
+			
+			# Receive the number of bytes to expect from the client.
+			num_bytes = int(conn.recv().decode())
+
+			# Receive the data from the client
+			data = conn.recv(num_bytes)
+			grp, mssg = pickle.loads(data)
+
+			post(grp, mssg)
+
 		elif(cmd =="END"):
-			print("Received END command from client!")
 			break
 		else:
 			print("No valid commands received")
+			continue
 
 
 

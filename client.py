@@ -7,6 +7,7 @@ Swapna Chakraverthy, Shikha Nair
 import socket
 import sys
 import ssl
+import pickle
 
 def main():
 	
@@ -44,9 +45,58 @@ def main():
 		cmd = input("Enter a command: \n")
 
 		if(cmd == 'GET'):
+		
+			# Send the GET command to the server.
 			conn.send(cmd.encode())
+
+			# Ask the user for the group name argument.
+			grp = input("Enter group name: ")
+
+			# Send the length of the argument to the server.
+			numbytes_sent = str(len(pickle.dumps(grp)))
+			conn.send(numbytes_sent.encode())
+
+			# Send the group name to the server.
+			conn.sendall(pickle.dumps(grp))
+
+			# Receive the length of the pickled messages list.
+			num_bytes = int(conn.recv().decode())
+
+			# Receive the list of messages from the server.
+			data = conn.recv(num_bytes)
+			msgs = pickle.loads(data)
+
+			for m in msgs:
+				print(m)
+
+		
 		elif(cmd == 'POST'):
+
+			# Send the POST command to the server.
 			conn.send(cmd.encode())
+
+			# Ask the user for the group name and the message.
+			grp = input("Enter group name: \n")
+			mssg = input("Enter message: \n")
+
+			params = (grp, mssg)
+
+			# Send the length of the pickled data to the server.
+			numbytes_sent = str(len(pickle.dumps(params)))
+
+			try:
+				conn.send(numbytes_sent.encode())
+			except ssl.SSLError as e:
+				print(e)
+				break
+			
+			# Send the data to the server
+			try:
+				conn.sendall(pickle.dumps(params))
+			except ssl.SSLError as e:
+				print(e)
+				break
+
 		elif(cmd == 'END'):
 			conn.send(cmd.encode())
 			break
